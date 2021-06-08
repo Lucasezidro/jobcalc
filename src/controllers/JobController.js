@@ -6,23 +6,19 @@ module.exports = {
     create(req, res){
         return res.render("job")
     },
-    save(req, res){
-        const jobs = Job.get()
-        const lastId = jobs[jobs.length - 1]?.id || 0;
-
-        jobs.push({ 
-            id: lastId + 1,
+    async save(req, res){
+        await Job.create({
             name: req.body.name, 
-            "daily-hours": req.body["daily-hours"],
-            "total-hours": req.body["total-hours"],
+            daily_hours: req.body.daily_hours,
+            total_hours: req.body.total_hours,
             created_at: Date.now()
         })
         return res.redirect('/')
     },
-    show(req, res) {
+    async show(req, res) {
 
-        const jobId = req.params.id
-        const jobs = Job.get()
+        const jobId = req.params.id 
+        const jobs = await Job.get()
 
         const job = jobs.find(job => Number(job.id) === Number(jobId))
 
@@ -30,15 +26,15 @@ module.exports = {
             return res.send('Job not found') 
         }
 
-        const profile = Profile.get()
+        const profile = await Profile.get()
 
-        job.budget = JobUtils.calculateBudget(job, profile["value-hour"])
+        job.budget = JobUtils.calculateBudget(job, profile.value_hour)
 
         return res.render("job-edit", ( job ))
     },
-    update(req, res) {
+    async update(req, res) {
         const jobId = req.params.id
-        const jobs = Job.get()
+        const jobs = await Job.get()
         const job = jobs.find(job => Number(job.id) === Number(jobId))
 
         if(!job) {
@@ -47,8 +43,8 @@ module.exports = {
         const updateJob = {
             ...job,
             name: req.body.name, 
-            "total-hours": req.body["total-hours"],
-            "daily-hours": req.body["daily-hours"],
+            total_hours: req.body.total_hours,
+            daily_hours: req.body.daily_hours,
         }
          const newJobs = jobs.map(job => {
             if(Number(job.id) === Number(jobId)) {
@@ -61,9 +57,9 @@ module.exports = {
 
         res.redirect('/job/' + jobId)
     },
-    delete(req, res){
+    async delete(req, res){
         const jobId = req.params.id
-        Job.delete(jobId)
+        await Job.delete(jobId)
         return res.redirect('/')
     }
     }
